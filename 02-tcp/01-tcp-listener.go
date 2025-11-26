@@ -59,7 +59,10 @@ func main() {
 		log.Fatalf("Error: %v", err)
 	}
 
+	defer conn.Close()
+
 	for line := range getLines(conn) {
 		fmt.Println(line)
 	}
+
 }
