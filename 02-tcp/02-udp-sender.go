@@ -11,32 +11,36 @@ import (
 func main() {
 	addr, err := net.ResolveUDPAddr("udp", "localhost:42069")
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("Error resolving address: %v", err)
 	}
 
-	conn, err := net.DialUDP("udp", nil, addr)
-
-	defer conn.Close()
+	dial, err := net.DialUDP("udp", nil, addr)
+	if err != nil {
+		log.Fatalf("Error creating UDP connection: %v", err)
+	}
+	defer dial.Close()
 
 	reader := bufio.NewReader(os.Stdin)
 
+	fmt.Println("UDP client started. Type messages to send:")
+
 	for {
-		fmt.Print(">")
+		fmt.Print("> ")
 
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			log.Fatalf("Error: %v", err)
+			log.Printf("Error reading input: %v", err)
 			break
 		}
 
-		_, err = conn.Write([]byte(line))
+		n, err := dial.Write([]byte(line))
 		if err != nil {
-			log.Fatalf("Error: %v", err)
-			break
+			log.Printf("Error sending: %v", err)
+			continue // Try to send next message
 		}
-	}
 
+		fmt.Printf("Sent %d bytes\n", n)
+	}
 }
 
-// command:
-// "nc -u -l 42069"	--	run this to see the writes as logs on a seperate terminal
+// Start a UDP server (listener/receiver): "nc -u -l 42069"
